@@ -178,12 +178,6 @@ class Transformer(lark.Transformer):
         raise NotImplementedError(data)
 
 
-class Array(list):
-    def __str__(self):
-        result = ",".join(str(value) for value in self)
-        return result
-
-
 class Expression:
     def __init__(self, str_function, evaluate_function):
         self.str_function = str_function
@@ -199,6 +193,20 @@ class Expression:
 
     def __repr__(self):
         result = str(self)
+        return result
+
+
+class Array(list, Expression):
+    def __init__(self, items=None):
+        list.__init__(self, [] if items is None else items)
+        Expression.__init__(self, self._str, self._evaluate)
+
+    def _evaluate(self):
+        result = Array(evaluate(value) for value in self)
+        return result
+
+    def _str(self):
+        result = ",".join(str(value) for value in self)
         return result
 
 
@@ -254,7 +262,7 @@ for effect_name in transformer.used_effect_names:
     all_techniques.extend(techniques)
 
 print("Techniques", "=", ",".join(all_techniques), sep="")
-print("TechniquesSorting", "=", ",".join(all_techniques), sep="")
+print("TechniqueSorting", "=", ",".join(all_techniques), sep="")
 
 for effect_name in sorted(
     transformer.parameters_by_effect_name.keys()
@@ -285,7 +293,7 @@ for effect_name in sorted(
             any_warning |= used
 
     for name, value in parameters.items():
-        print(name, "=", value, sep="")
+        print(name, "=", evaluate(value), sep="")
 
 if any_warning:
     logging.warning("finished with warnings")
